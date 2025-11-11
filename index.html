@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <title>Desafio de Peso</title>
+  <style>
+    :root {
+      --primary: #6c63ff;
+      --bg: #f3f4f8;
+      --text: #222;
+      --white: #fff;
+      --radius: 12px;
+      --shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    html, body {
+      height: 100%;
+      margin: 0;
+      -webkit-text-size-adjust: 100%;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: "Poppins", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      margin: 20px 0;
+      text-align: center;
+      color: var(--primary);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .card {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 420px;
+      padding: 18px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .inputs {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    input {
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: var(--radius);
+      font-size: 16px;
+      width: 100%;
+      box-sizing: border-box;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    button {
+      background: var(--primary);
+      color: var(--white);
+      border: none;
+      border-radius: var(--radius);
+      padding: 10px;
+      font-size: 15px;
+      cursor: pointer;
+      width: 100%;
+      font-weight: 500;
+      transition: background 0.3s ease;
+      -webkit-appearance: none;
+    }
+
+    button:hover {
+      background: #584df2;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 13px;
+      display: block;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    th, td {
+      padding: 8px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+      white-space: nowrap;
+    }
+
+    td input {
+      width: 60px;
+      text-align: center;
+      font-size: 13px;
+      padding: 4px;
+    }
+
+    .delete-btn {
+      background: #e53935;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 5px 8px;
+      font-size: 12px;
+      cursor: pointer;
+      -webkit-appearance: none;
+    }
+
+    .delete-btn:hover {
+      background: #c62828;
+    }
+
+    #vencedor {
+      margin-top: 15px;
+      font-weight: 600;
+      text-align: center;
+      font-size: 16px;
+      background: linear-gradient(135deg, #ffeb3b, #ffc107);
+      color: #333;
+      border-radius: var(--radius);
+      padding: 10px;
+      box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
+      display: none;
+      line-height: 1.4;
+      animation: pop 0.8s ease-in-out;
+    }
+
+    @keyframes pop {
+      0% { transform: scale(0.7); opacity: 0; }
+      80% { transform: scale(1.1); opacity: 1; }
+      100% { transform: scale(1); }
+    }
+
+    .explicacao {
+      padding: 12px;
+      background: #f8f9ff;
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      font-size: 13px;
+      color: #444;
+      line-height: 1.5;
+    }
+
+    .explicacao code {
+      display: block;
+      background: #efefef;
+      padding: 6px;
+      border-radius: 6px;
+      margin: 6px 0;
+      font-size: 12px;
+      font-family: monospace;
+      overflow-wrap: break-word;
+    }
+
+    .explicacao strong {
+      color: var(--primary);
+    }
+
+    @media (min-width: 480px) {
+      h1 { font-size: 1.8rem; }
+      #vencedor { font-size: 18px; padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Desafio de Peso</h1>
+
+  <div class="card">
+    <div class="inputs">
+      <input id="nome" placeholder="Nome" />
+      <input id="pesoInicial" type="number" placeholder="Peso inicial (kg)" />
+      <input id="pesoFinal" type="number" placeholder="Peso final (kg)" />
+      <button id="btnAdd">Adicionar</button>
+    </div>
+
+    <table id="tabela">
+      <thead>
+        <tr>
+          <th>Posição</th>
+          <th>Nome</th>
+          <th>Inicial</th>
+          <th>Final</th>
+          <th>Variação</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <button id="btnCalc">🏆 Calcular Resultado</button>
+    <div id="vencedor"></div>
+
+    <div class="explicacao">
+      <strong>Como é feita a conta:</strong><br>
+      A variação percentual é calculada assim:
+      <code>(Peso Inicial - Peso Final) / Peso Inicial × 100</code>
+      Isso mostra quantos por cento do peso inicial foi perdido.<br><br>
+      Exemplo: 80kg → 72kg = <strong>(80 - 72) / 80 × 100 = 10%</strong> de perda.
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      let pessoas = JSON.parse(localStorage.getItem("pessoas")) || [];
+
+      const salvar = () => localStorage.setItem("pessoas", JSON.stringify(pessoas));
+
+      const atualizarTabela = () => {
+        const tbody = document.querySelector("#tabela tbody");
+        tbody.innerHTML = "";
+
+        pessoas.forEach((p, i) => {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `
+            <td>${p.posicao ?? "-"}</td>
+            <td>${p.nome}</td>
+            <td><input type="number" value="${p.pesoInicial}" data-index="${i}" data-campo="pesoInicial"></td>
+            <td><input type="number" value="${p.pesoFinal ?? ""}" data-index="${i}" data-campo="pesoFinal"></td>
+            <td>${p.variacao ? p.variacao.toFixed(1) + "%" : "-"}</td>
+            <td><button class="delete-btn" data-index="${i}">X</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      };
+
+      const adicionarPessoa = () => {
+        const nome = document.getElementById("nome").value.trim();
+        const pesoInicial = parseFloat(document.getElementById("pesoInicial").value);
+        const pesoFinal = parseFloat(document.getElementById("pesoFinal").value);
+
+        if (!nome || isNaN(pesoInicial)) {
+          alert("Preencha o nome e o peso inicial!");
+          return;
+        }
+
+        pessoas.push({
+          nome,
+          pesoInicial,
+          pesoFinal: isNaN(pesoFinal) ? null : pesoFinal
+        });
+
+        salvar();
+        atualizarTabela();
+
+        document.getElementById("nome").value = "";
+        document.getElementById("pesoInicial").value = "";
+        document.getElementById("pesoFinal").value = "";
+      };
+
+      const calcularVencedor = () => {
+        pessoas.forEach(p => {
+          if (p.pesoInicial && p.pesoFinal) {
+            p.variacao = ((p.pesoInicial - p.pesoFinal) / p.pesoInicial) * 100;
+          } else {
+            p.variacao = NaN;
+          }
+        });
+
+        pessoas.sort(
+          (a, b) =>
+            (isNaN(b.variacao) ? -1 : b.variacao) -
+            (isNaN(a.variacao) ? -1 : a.variacao)
+        );
+
+        pessoas.forEach((p, i) => {
+          p.posicao = isNaN(p.variacao) ? "-" : `${i + 1}º`;
+        });
+
+        salvar();
+        atualizarTabela();
+
+        const div = document.getElementById("vencedor");
+        div.style.display = "block";
+
+        const melhores = pessoas.filter(
+          p => p.variacao === pessoas[0].variacao && !isNaN(p.variacao)
+        );
+
+        if (melhores.length === 0) {
+          div.innerHTML = "Nenhum participante completo.";
+        } else if (melhores.length === 1) {
+          div.innerHTML = `🎉 <strong>${melhores[0].nome}</strong> venceu com <strong>${melhores[0].variacao.toFixed(
+            1
+          )}%</strong> de perda! 🏅`;
+        } else {
+          const nomes = melhores.map(p => `<strong>${p.nome}</strong>`).join(", ");
+          div.innerHTML = `🤝 Empate! ${nomes} com <strong>${pessoas[0].variacao.toFixed(
+            1
+          )}%</strong> cada! 🏆`;
+        }
+      };
+
+      document
+        .getElementById("btnAdd")
+        .addEventListener("click", adicionarPessoa);
+      document
+        .getElementById("btnCalc")
+        .addEventListener("click", calcularVencedor);
+
+      // Delegação para inputs e botões dinâmicos
+      document.addEventListener("input", e => {
+        if (e.target.tagName === "INPUT" && e.target.dataset.index) {
+          const i = e.target.dataset.index;
+          const campo = e.target.dataset.campo;
+          pessoas[i][campo] = parseFloat(e.target.value);
+          salvar();
+        }
+      });
+
+      document.addEventListener("click", e => {
+        if (e.target.classList.contains("delete-btn")) {
+          const i = e.target.dataset.index;
+          if (confirm("Deseja excluir esta pessoa?")) {
+            pessoas.splice(i, 1);
+            salvar();
+            atualizarTabela();
+          }
+        }
+      });
+
+      atualizarTabela();
+    });
+  </script>
+</body>
+</html>
