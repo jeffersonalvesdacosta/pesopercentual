@@ -14,14 +14,8 @@
       --shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
 
-    html, body {
-      height: 100%;
-      margin: 0;
-      -webkit-text-size-adjust: 100%;
-      -webkit-tap-highlight-color: transparent;
-    }
-
     body {
+      margin: 0;
       font-family: "Poppins", sans-serif;
       background: var(--bg);
       color: var(--text);
@@ -36,7 +30,6 @@
       margin: 20px 0;
       text-align: center;
       color: var(--primary);
-      -webkit-font-smoothing: antialiased;
     }
 
     .card {
@@ -46,16 +39,9 @@
       width: 100%;
       max-width: 420px;
       padding: 18px;
-      box-sizing: border-box;
       display: flex;
       flex-direction: column;
       gap: 14px;
-    }
-
-    .inputs {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
     }
 
     input {
@@ -65,8 +51,6 @@
       font-size: 16px;
       width: 100%;
       box-sizing: border-box;
-      outline: none;
-      -webkit-appearance: none;
     }
 
     button {
@@ -77,10 +61,8 @@
       padding: 10px;
       font-size: 15px;
       cursor: pointer;
+      transition: 0.3s;
       width: 100%;
-      font-weight: 500;
-      transition: background 0.3s ease;
-      -webkit-appearance: none;
     }
 
     button:hover {
@@ -119,11 +101,6 @@
       padding: 5px 8px;
       font-size: 12px;
       cursor: pointer;
-      -webkit-appearance: none;
-    }
-
-    .delete-btn:hover {
-      background: #c62828;
     }
 
     #vencedor {
@@ -137,14 +114,6 @@
       padding: 10px;
       box-shadow: 0 0 10px rgba(255, 215, 0, 0.4);
       display: none;
-      line-height: 1.4;
-      animation: pop 0.8s ease-in-out;
-    }
-
-    @keyframes pop {
-      0% { transform: scale(0.7); opacity: 0; }
-      80% { transform: scale(1.1); opacity: 1; }
-      100% { transform: scale(1); }
     }
 
     .explicacao {
@@ -155,26 +124,6 @@
       font-size: 13px;
       color: #444;
       line-height: 1.5;
-    }
-
-    .explicacao code {
-      display: block;
-      background: #efefef;
-      padding: 6px;
-      border-radius: 6px;
-      margin: 6px 0;
-      font-size: 12px;
-      font-family: monospace;
-      overflow-wrap: break-word;
-    }
-
-    .explicacao strong {
-      color: var(--primary);
-    }
-
-    @media (min-width: 480px) {
-      h1 { font-size: 1.8rem; }
-      #vencedor { font-size: 18px; padding: 12px; }
     }
   </style>
 </head>
@@ -196,7 +145,8 @@
           <th>Nome</th>
           <th>Inicial</th>
           <th>Final</th>
-          <th>Variação</th>
+          <th>Diferença (kg)</th>
+          <th>Variação (%)</th>
           <th></th>
         </tr>
       </thead>
@@ -208,10 +158,8 @@
 
     <div class="explicacao">
       <strong>Como é feita a conta:</strong><br>
-      A variação percentual é calculada assim:
-      <code>(Peso Inicial - Peso Final) / Peso Inicial × 100</code>
-      Isso mostra quantos por cento do peso inicial foi perdido.<br><br>
-      Exemplo: 80kg → 72kg = <strong>(80 - 72) / 80 × 100 = 10%</strong> de perda.
+      Diferença em kg = <code>Peso Inicial - Peso Final</code><br>
+      Variação percentual = <code>(Peso Inicial - Peso Final) / Peso Inicial × 100</code>
     </div>
   </div>
 
@@ -232,6 +180,7 @@
             <td>${p.nome}</td>
             <td><input type="number" value="${p.pesoInicial}" data-index="${i}" data-campo="pesoInicial"></td>
             <td><input type="number" value="${p.pesoFinal ?? ""}" data-index="${i}" data-campo="pesoFinal"></td>
+            <td>${isNaN(p.diferenca) ? "-" : p.diferenca.toFixed(1)}</td>
             <td>${p.variacao ? p.variacao.toFixed(1) + "%" : "-"}</td>
             <td><button class="delete-btn" data-index="${i}">X</button></td>
           `;
@@ -252,7 +201,7 @@
         pessoas.push({
           nome,
           pesoInicial,
-          pesoFinal: isNaN(pesoFinal) ? null : pesoFinal
+          pesoFinal: isNaN(pesoFinal) ? null : pesoFinal,
         });
 
         salvar();
@@ -266,16 +215,17 @@
       const calcularVencedor = () => {
         pessoas.forEach(p => {
           if (p.pesoInicial && p.pesoFinal) {
-            p.variacao = ((p.pesoInicial - p.pesoFinal) / p.pesoInicial) * 100;
+            p.diferenca = p.pesoInicial - p.pesoFinal;
+            p.variacao = (p.diferenca / p.pesoInicial) * 100;
           } else {
+            p.diferenca = NaN;
             p.variacao = NaN;
           }
         });
 
-        pessoas.sort(
-          (a, b) =>
-            (isNaN(b.variacao) ? -1 : b.variacao) -
-            (isNaN(a.variacao) ? -1 : a.variacao)
+        pessoas.sort((a, b) =>
+          (isNaN(b.variacao) ? -1 : b.variacao) -
+          (isNaN(a.variacao) ? -1 : a.variacao)
         );
 
         pessoas.forEach((p, i) => {
@@ -295,25 +245,16 @@
         if (melhores.length === 0) {
           div.innerHTML = "Nenhum participante completo.";
         } else if (melhores.length === 1) {
-          div.innerHTML = `🎉 <strong>${melhores[0].nome}</strong> venceu com <strong>${melhores[0].variacao.toFixed(
-            1
-          )}%</strong> de perda! 🏅`;
+          div.innerHTML = `🎉 <strong>${melhores[0].nome}</strong> venceu com <strong>${melhores[0].variacao.toFixed(1)}%</strong> (${melhores[0].diferenca.toFixed(1)} kg) de perda! 🏅`;
         } else {
           const nomes = melhores.map(p => `<strong>${p.nome}</strong>`).join(", ");
-          div.innerHTML = `🤝 Empate! ${nomes} com <strong>${pessoas[0].variacao.toFixed(
-            1
-          )}%</strong> cada! 🏆`;
+          div.innerHTML = `🤝 Empate! ${nomes} com <strong>${pessoas[0].variacao.toFixed(1)}%</strong> (${pessoas[0].diferenca.toFixed(1)} kg) cada! 🏆`;
         }
       };
 
-      document
-        .getElementById("btnAdd")
-        .addEventListener("click", adicionarPessoa);
-      document
-        .getElementById("btnCalc")
-        .addEventListener("click", calcularVencedor);
+      document.getElementById("btnAdd").addEventListener("click", adicionarPessoa);
+      document.getElementById("btnCalc").addEventListener("click", calcularVencedor);
 
-      // Delegação para inputs e botões dinâmicos
       document.addEventListener("input", e => {
         if (e.target.tagName === "INPUT" && e.target.dataset.index) {
           const i = e.target.dataset.index;
